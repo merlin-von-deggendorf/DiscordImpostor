@@ -55,7 +55,7 @@ client.on('interactionCreate', async (interaction) => {
       newGame.name = `Game in channel ${interaction.channelId}`;
       newGame.gamemaster= interaction.user.id;
       await gameRepo.save(newGame);
-      await interaction.reply(`New game created with ID: ${newGame.id} channel type: ${interaction.channel?.isVoiceBased()}`);
+      await interaction.reply(`New game created with ID: ${newGame.id} channel type: ${interaction.channel?.isVoiceBased()} gamemaster: ${newGame.gamemaster}`);
     }
   } else if (interaction.isUserContextMenuCommand()) {
     if (interaction.commandName === 'Ping') {

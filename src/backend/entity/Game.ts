@@ -9,6 +9,9 @@ export class Game {
   @Column({ type: 'varchar', length: 100 })
   name!: string;
 
+  @Column({ type: 'varchar', length: 20 })
+  gamemaster!: string;
+
   @Column({ type: 'timestamp' })
   timestamp!: Date;
 
