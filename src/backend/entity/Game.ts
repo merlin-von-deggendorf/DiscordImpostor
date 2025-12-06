@@ -9,7 +9,7 @@ export class Game {
   @Column({ type: 'varchar', length: 100 })
   name!: string;
 
-  @Column({ type: 'varchar', length: 20 })
+  @Column({ type: 'decimal', precision: 30, scale: 0 })
   gamemaster!: string;
 
   @Column({ type: 'timestamp' })
