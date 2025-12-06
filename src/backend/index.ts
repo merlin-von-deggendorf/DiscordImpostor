@@ -53,6 +53,7 @@ client.on('interactionCreate', async (interaction) => {
       const gameRepo = AppDataSource.getRepository(Game);
       const newGame = gameRepo.create();
       newGame.name = `Game in channel ${interaction.channelId}`;
+      newGame.gamemaster= interaction.user.id;
       await gameRepo.save(newGame);
       await interaction.reply(`New game created with ID: ${newGame.id} channel type: ${interaction.channel?.isVoiceBased()}`);
     }
