@@ -34,13 +34,24 @@ client.on('ready', async () => {
 });
 
 client.on('interactionCreate', async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
-
-  if (interaction.commandName === 'ping') {
-    const embed = PingGui.createEmbed();
-    await interaction.reply({ embeds: [embed] });
+  if (interaction.isChatInputCommand()) {
+    if (interaction.commandName === 'ping') {
+      const embed = PingGui.createEmbed();
+      const actionRow = PingGui.createActionRow();
+      await interaction.reply({ embeds: [embed], components: [actionRow] });
+    }
+    // Add handlers for other commands
+  } else if (interaction.isButton()) {
+    if (interaction.customId === 'okay') {
+      await interaction.reply('Okay acknowledged!');
+    }
+  } else if (interaction.isUserContextMenuCommand()) {
+    if (interaction.commandName === 'Ping') {
+      const embed = PingGui.createEmbed();
+      const actionRow = PingGui.createActionRow();
+      await interaction.reply({ embeds: [embed], components: [actionRow] });
+    }
   }
-  // Add handlers for other commands
 });
 
 client.on('messageCreate', (message) => {
