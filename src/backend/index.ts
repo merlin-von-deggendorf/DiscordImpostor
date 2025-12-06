@@ -54,6 +54,8 @@ client.on('interactionCreate', async (interaction) => {
       const newGame = gameRepo.create();
       newGame.name = `Game in channel ${interaction.channelId}`;
       newGame.gamemaster= interaction.user.id;
+      newGame.timestamp = new Date();
+      newGame.duration = 30; // default duration
       await gameRepo.save(newGame);
       await interaction.reply(`New game created with ID: ${newGame.id} channel type: ${interaction.channel?.isVoiceBased()} gamemaster: ${newGame.gamemaster}`);
     }
