@@ -2,7 +2,8 @@ import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { User } from './entity/User';
+import { Game } from './entity/Game';
+import { GameParticipant } from './entity/GameParticipant';
 
 
 export const AppDataSource = new DataSource({
@@ -12,7 +13,7 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
-  entities: [User],
+  entities: [ Game, GameParticipant],
   synchronize: true,
   // optional but explicit:
   connectorPackage: 'mysql2',

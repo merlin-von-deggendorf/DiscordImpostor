@@ -2,8 +2,10 @@ import 'dotenv/config';
 import { Client, GatewayIntentBits } from 'discord.js';
 import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v9';
-import { commands } from './commands.js';
-import { PingGui } from './gui.js';
+import { commands } from './commands';
+import { PingGui } from './gui';
+import { AppDataSource } from './data-source';
+import { Game } from './entity/Game';
 
 const client = new Client({
   intents: [
@@ -43,7 +45,11 @@ client.on('interactionCreate', async (interaction) => {
     // Add handlers for other commands
   } else if (interaction.isButton()) {
     if (interaction.customId === 'okay') {
-      await interaction.reply('Okay acknowledged!');
+      const gameRepo = AppDataSource.getRepository(Game);
+      const newGame = gameRepo.create();
+      newGame.name = `Game in channel ${interaction.channelId}`;
+      await gameRepo.save(newGame);
+      await interaction.reply(`New game created with ID: ${newGame.id}`);
     }
   } else if (interaction.isUserContextMenuCommand()) {
     if (interaction.commandName === 'Ping') {
@@ -59,4 +65,8 @@ client.on('messageCreate', (message) => {
   message.reply('hello world');
 });
 
-client.login(process.env.DISCORD_TOKEN);
+(async () => {
+  await AppDataSource.initialize();
+  console.log('Database connected and synchronized.');
+  client.login(process.env.DISCORD_TOKEN);
+})();
