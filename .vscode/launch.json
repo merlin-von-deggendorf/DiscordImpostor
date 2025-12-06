@@ -9,7 +9,8 @@
             "request": "launch",
             "name": "npm start",
             "runtimeExecutable": "npm",
-            "runtimeArgs": ["start"]
+            "runtimeArgs": ["start"],
+            "console": "integratedTerminal"
         }
     ]
 }
