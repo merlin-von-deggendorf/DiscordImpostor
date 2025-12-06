@@ -1,15 +1,21 @@
 import 'dotenv/config';
-import 'reflect-metadata';
-import { AppDataSource } from './data-source';
+import { Client, GatewayIntentBits } from 'discord.js';
 
-async function main() {
-  await AppDataSource.initialize();
-  console.log('DataSource initialized');
-
-  // your backend logic here (CLI, jobs, RPC, whatever)
-}
-
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+  ],
 });
+
+client.on('ready', () => {
+  console.log('Bot is ready!');
+});
+
+client.on('messageCreate', (message) => {
+  if (message.author.bot) return;
+  message.reply('hello world');
+});
+
+client.login(process.env.DISCORD_TOKEN);
