@@ -1,8 +1,9 @@
 import 'dotenv/config';
-import { Client, GatewayIntentBits, EmbedBuilder } from 'discord.js';
+import { Client, GatewayIntentBits } from 'discord.js';
 import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v9';
 import { commands } from './commands.js';
+import { PingGui } from './gui.js';
 
 const client = new Client({
   intents: [
@@ -36,11 +37,7 @@ client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
   if (interaction.commandName === 'ping') {
-    const embed = new EmbedBuilder()
-      .setTitle('Pong!')
-      .setDescription('The bot is responding!')
-      .setColor(0x00ff00); // Green color
-
+    const embed = PingGui.createEmbed();
     await interaction.reply({ embeds: [embed] });
   }
   // Add handlers for other commands
