@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { Client, GatewayIntentBits } from 'discord.js';
+import { Client, GatewayIntentBits, ChannelType } from 'discord.js';
 import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v9';
 import { commands } from './commands';
@@ -45,11 +45,16 @@ client.on('interactionCreate', async (interaction) => {
     // Add handlers for other commands
   } else if (interaction.isButton()) {
     if (interaction.customId === 'okay') {
+
+      if (!interaction.channel?.isVoiceBased()) {
+        await interaction.reply('This command can only be used in voice channels.');
+        return;
+      }
       const gameRepo = AppDataSource.getRepository(Game);
       const newGame = gameRepo.create();
       newGame.name = `Game in channel ${interaction.channelId}`;
       await gameRepo.save(newGame);
-      await interaction.reply(`New game created with ID: ${newGame.id}`);
+      await interaction.reply(`New game created with ID: ${newGame.id} channel type: ${interaction.channel?.isVoiceBased()}`);
     }
   } else if (interaction.isUserContextMenuCommand()) {
     if (interaction.commandName === 'Ping') {

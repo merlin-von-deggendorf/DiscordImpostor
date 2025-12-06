@@ -9,6 +9,12 @@ export class Game {
   @Column({ type: 'varchar', length: 100 })
   name!: string;
 
+  @Column({ type: 'timestamp' })
+  timestamp!: Date;
+
+  @Column({ type: 'int' })
+  duration!: number;
+
   @OneToMany(() => GameParticipant, participant => participant.game)
   participants!: GameParticipant[];
 }
