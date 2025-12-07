@@ -1,5 +1,11 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { GameParticipant } from "./GameParticipant"
+import { GameParticipant } from './GameParticipant';
+
+export enum GameState {
+  Waiting4Players = 'waiting4players',
+  Running = 'running',
+  Finished = 'finished',
+}
 
 @Entity()
 export class Game {
@@ -17,6 +23,9 @@ export class Game {
 
   @Column({ type: 'int' })
   duration!: number;
+
+  @Column({ type: 'enum', enum: GameState, default: GameState.Waiting4Players })
+  state!: GameState;
 
   @OneToMany(() => GameParticipant, participant => participant.game)
   participants!: GameParticipant[];

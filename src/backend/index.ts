@@ -1,11 +1,10 @@
 import 'dotenv/config';
-import { Client, GatewayIntentBits, ChannelType } from 'discord.js';
+import { Client, GatewayIntentBits } from 'discord.js';
 import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v9';
 import { commands } from './commands';
 import { PingGui } from './gui';
 import dbInstance from './data-source';
-import { Game } from './entity/Game';
 
 const client = new Client({
   intents: [
@@ -50,13 +49,13 @@ client.on('interactionCreate', async (interaction) => {
         await interaction.reply('This command can only be used in voice channels.');
         return;
       }
-      const gameRepo = dbInstance.getRepository(Game);
-      const newGame = gameRepo.create();
-      newGame.name = `Game in channel ${interaction.channelId}`;
-      newGame.gamemaster= interaction.user.id;
-      newGame.timestamp = new Date();
-      newGame.duration = 30; // default duration
-      await gameRepo.save(newGame);
+      const newGame = await dbInstance.createGame(
+        `Game in channel ${interaction.channelId}`,
+        interaction.user.id,
+        new Date(),
+        30,
+        // state defaults to waiting4players
+      );
       await interaction.reply(`New game created with ID: ${newGame.id} channel type: ${interaction.channel?.isVoiceBased()} gamemaster: ${newGame.gamemaster}`);
     } else if (interaction.customId === 'hello') {
       await interaction.reply('Hello World button clicked!');

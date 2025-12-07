@@ -1,8 +1,6 @@
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { Game } from './entity/Game';
+import { Game, GameState } from './entity/Game';
 import { GameParticipant } from './entity/GameParticipant';
 
 
@@ -28,14 +26,22 @@ class DataBase {
   async initialize() {
     return await this.datasource.initialize();
   }
-  async createGame() {
+  async createGame(
+    name: string,
+    gamemaster: string,
+    timestamp: Date,
+    duration = 30,
+    state: GameState = GameState.Waiting4Players,
+  ): Promise<Game> {
     const gameRepo = this.datasource.getRepository(Game);
-    const newGame = gameRepo.create();
-    newGame.name = `Game in channel ${interaction.channelId}`;
-    newGame.gamemaster = interaction.user.id;
-    newGame.timestamp = new Date();
-    newGame.duration = 30; // default duration
-    await gameRepo.save(newGame);
+    const newGame = gameRepo.create({
+      name,
+      gamemaster,
+      timestamp,
+      duration,
+      state,
+    });
+    return await gameRepo.save(newGame);
   }
 
 }
