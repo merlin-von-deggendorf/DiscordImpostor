@@ -4,7 +4,7 @@ import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v9';
 import { commands } from './commands';
 import { PingGui } from './gui';
-import { AppDataSource } from './data-source';
+import dbInstance from './data-source';
 import { Game } from './entity/Game';
 
 const client = new Client({
@@ -50,7 +50,7 @@ client.on('interactionCreate', async (interaction) => {
         await interaction.reply('This command can only be used in voice channels.');
         return;
       }
-      const gameRepo = AppDataSource.getRepository(Game);
+      const gameRepo = dbInstance.getRepository(Game);
       const newGame = gameRepo.create();
       newGame.name = `Game in channel ${interaction.channelId}`;
       newGame.gamemaster= interaction.user.id;
@@ -78,7 +78,6 @@ client.on('messageCreate', (message) => {
 });
 
 (async () => {
-  await AppDataSource.initialize();
   console.log('Database connected and synchronized.');
   client.login(process.env.DISCORD_TOKEN);
 })();

@@ -6,7 +6,7 @@ import { Game } from './entity/Game';
 import { GameParticipant } from './entity/GameParticipant';
 
 
-export const AppDataSource = new DataSource({
+const AppDataSource = new DataSource({
   type: 'mariadb',
   host: process.env.DB_HOST ,
   port:  Number(process.env.DB_PORT) ,
@@ -20,5 +20,15 @@ export const AppDataSource = new DataSource({
 });
 
 class DataBase{
-  
+  datasource: DataSource;
+
+  constructor(){
+    this.datasource = AppDataSource;
+  }
+  async initialize(){
+    return await this.datasource.initialize();
+  }
 }
+const dbInstance = new DataBase();
+await dbInstance.initialize();
+export default dbInstance;
