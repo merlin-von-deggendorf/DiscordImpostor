@@ -18,3 +18,7 @@ export const AppDataSource = new DataSource({
   // optional but explicit:
   connectorPackage: 'mysql2',
 });
+
+class DataBase{
+  
+}
