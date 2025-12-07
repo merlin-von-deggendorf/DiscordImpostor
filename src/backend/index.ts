@@ -4,7 +4,7 @@ import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v9';
 import { commands } from './commands';
 import { PingGui } from './gui';
-import dbInstance from './data-source';
+import gameLogic from './game-logic';
 
 const client = new Client({
   intents: [
@@ -49,7 +49,7 @@ client.on('interactionCreate', async (interaction) => {
         await interaction.reply('This command can only be used in voice channels.');
         return;
       }
-      const newGame = await dbInstance.createGame(
+      const newGame = await gameLogic.createGame(
         `Game in channel ${interaction.channelId}`,
         interaction.user.id,
         new Date(),
