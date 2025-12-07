@@ -58,7 +58,10 @@ client.on('interactionCreate', async (interaction) => {
       newGame.duration = 30; // default duration
       await gameRepo.save(newGame);
       await interaction.reply(`New game created with ID: ${newGame.id} channel type: ${interaction.channel?.isVoiceBased()} gamemaster: ${newGame.gamemaster}`);
+    } else if (interaction.customId === 'hello') {
+      await interaction.reply('Hello World button clicked!');
     }
+
   } else if (interaction.isUserContextMenuCommand()) {
     if (interaction.commandName === 'Ping') {
       const embed = PingGui.createEmbed();
@@ -68,9 +71,10 @@ client.on('interactionCreate', async (interaction) => {
   }
 });
 
+
 client.on('messageCreate', (message) => {
   if (message.author.bot) return;
-  message.reply('hello world');
+  // message.reply('hello world');
 });
 
 (async () => {

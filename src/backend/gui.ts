@@ -13,7 +13,17 @@ export class PingGui {
       .setCustomId('okay')
       .setLabel('Okay')
       .setStyle(ButtonStyle.Primary);
+    const hello = new ButtonBuilder()
+      .setCustomId('hello')
+      .setLabel('Hello World!')
+      .setStyle(ButtonStyle.Primary);
+    const start = new ButtonBuilder()
+      .setCustomId('start')
+      .setLabel('Start Game')
+      .setStyle(ButtonStyle.Primary);
+    
 
-    return new ActionRowBuilder<ButtonBuilder>().addComponents(button);
+    return new ActionRowBuilder<ButtonBuilder>().addComponents(button, hello, start);
+
   }
 }
