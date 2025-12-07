@@ -1,9 +1,10 @@
-import dbInstance from './data-source';
+import { Client } from 'discord.js';
+import dbInstance, { DataBase } from './data-source';
 import { Game, GameState } from './entity/Game';
 import { GameParticipant } from './entity/GameParticipant';
 
 class GameLogic {
-  constructor(private readonly db = dbInstance) {}
+  constructor(private readonly db: DataBase = dbInstance) {}
 
   async createGame(
     name: string,
@@ -12,36 +13,42 @@ class GameLogic {
     duration = 30,
     state: GameState = GameState.Waiting4Players,
   ): Promise<Game> {
-    const gameRepo = this.db.datasource.getRepository(Game);
-    const newGame = gameRepo.create({
-      name,
-      gamemaster,
-      timestamp,
-      duration,
-      state,
-    });
-    return await gameRepo.save(newGame);
+    return await this.db.createGame(name, gamemaster, timestamp, duration, state);
   }
 
   async addPlayer(gameId: number, userId: string): Promise<GameParticipant> {
-    const gameRepo = this.db.datasource.getRepository(Game);
-    const participantRepo = this.db.datasource.getRepository(GameParticipant);
+    return await this.db.addPlayer(gameId, userId);
+  }
 
-    const game = await gameRepo.findOne({ where: { id: gameId } });
+  async startGame(gameId: number, client: Client): Promise<Game> {
+    const game = await this.db.getGameWithParticipants(gameId);
     if (!game) {
       throw new Error(`Game with id ${gameId} not found`);
     }
-
-    const existing = await participantRepo.findOne({
-      where: { game: { id: gameId }, userId },
-      relations: ['game'],
-    });
-    if (existing) {
-      throw new Error(`User ${userId} is already a participant in game ${gameId}`);
+    if (game.state === GameState.Running) {
+      throw new Error(`Game ${gameId} is already running`);
+    }
+    if (game.state === GameState.Finished) {
+      throw new Error(`Game ${gameId} is already finished`);
     }
 
-    const participant = participantRepo.create({ game, userId });
-    return await participantRepo.save(participant);
+    await this.db.updateGameState(gameId, GameState.Running);
+    const updatedGame = await this.db.getGameWithParticipants(gameId);
+    if (!updatedGame) {
+      throw new Error(`Game with id ${gameId} not found after update`);
+    }
+
+    const notifications = updatedGame.participants.map(async participant => {
+      try {
+        const user = await client.users.fetch(participant.userId);
+        await user.send(`Game "${updatedGame.name}" has started!`);
+      } catch (err) {
+        console.warn(`Failed to notify user ${participant.userId} about game ${gameId} start`, err);
+      }
+    });
+    await Promise.all(notifications);
+
+    return updatedGame;
   }
 }
 
