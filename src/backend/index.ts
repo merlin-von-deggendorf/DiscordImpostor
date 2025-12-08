@@ -4,7 +4,7 @@ import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v9';
 import { commands } from './commands';
 import { PingGui } from './gui';
-import gameLogic from './game-logic';
+import gameLogic from './gameresult';
 
 const client = new Client({
   intents: [
