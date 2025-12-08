@@ -29,7 +29,5 @@ export class Game {
 
   @OneToMany(() => GameParticipant, participant => participant.game)
   participants!: GameParticipant[];
-
-
 }
 
