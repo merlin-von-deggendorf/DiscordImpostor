@@ -43,5 +43,5 @@ sudo journalctl -u discord-impostor.service -f  # logs
 ```bash
 sudo bash scripts/update_service.sh
 ```
-- Enables the service (if not already), pulls latest from git, and restarts it.
-- Override `GIT_BRANCH`, `GIT_REMOTE`, or `REPO_DIR` if you need non-defaults.
+- Enables the service (if not already), does a simple `git pull` in the repo, and restarts it.
+- Override `REPO_DIR` if you need to run it from a different checkout.
