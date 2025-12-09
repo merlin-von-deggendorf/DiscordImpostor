@@ -31,7 +31,7 @@ scp ./.env pink-mole:~/DiscordImpostor/.env
 
 ### Service control
 ```bash
-
+systemctl enable discord-impostor.service 
 sudo systemctl start discord-impostor.service   # start
 sudo systemctl stop discord-impostor.service    # stop
 sudo systemctl restart discord-impostor.service # restart
