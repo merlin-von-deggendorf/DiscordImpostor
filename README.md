@@ -20,15 +20,21 @@ Invite the bot to your server, then use `/impostor` with at least 3 users.
 sudo bash scripts/install_service.sh
 ```
 - Requires Node.js/npm to already be installed and `npm ci` run once in the repo.
-- Uses the repo’s `.env` by default; override with `ENV_FILE=/path/to/env` if you prefer.
+- Uses the repo's `.env` by default; override with `ENV_FILE=/path/to/env` if you prefer.
 - Override `APP_DIR=/path/to/repo` to point the service at a different checkout.
+
+### Upload .env from Windows (scp)
+
+scp ./.env pink-mole:~/DiscordImpostor/.env
+
+
 
 ### Service control
 ```bash
+
 sudo systemctl start discord-impostor.service   # start
 sudo systemctl stop discord-impostor.service    # stop
 sudo systemctl restart discord-impostor.service # restart
 sudo systemctl status discord-impostor.service  # status
 sudo journalctl -u discord-impostor.service -f  # logs
-systemctl enable discord-impostor.service   # start
 ```
