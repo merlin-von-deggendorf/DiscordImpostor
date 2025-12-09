@@ -30,4 +30,5 @@ sudo systemctl stop discord-impostor.service    # stop
 sudo systemctl restart discord-impostor.service # restart
 sudo systemctl status discord-impostor.service  # status
 sudo journalctl -u discord-impostor.service -f  # logs
+systemctl enable discord-impostor.service   # start
 ```
