@@ -38,3 +38,10 @@ sudo systemctl restart discord-impostor.service # restart
 sudo systemctl status discord-impostor.service  # status
 sudo journalctl -u discord-impostor.service -f  # logs
 ```
+
+### Update + restart service
+```bash
+sudo bash scripts/update_service.sh
+```
+- Enables the service (if not already), pulls latest from git, and restarts it.
+- Override `GIT_BRANCH`, `GIT_REMOTE`, or `REPO_DIR` if you need non-defaults.
