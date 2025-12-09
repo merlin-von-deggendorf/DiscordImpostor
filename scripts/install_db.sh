@@ -1,6 +1,3 @@
-cd ~/DiscordImpostor
-
-cat > scripts/install_db.sh << 'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -28,18 +25,14 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get install -y mariadb-server mariadb-client
 
-systemctl enable mariadb
-systemctl start mariadb
+# Enable and start service
+systemctl enable --now mariadb
 
 ########################################
-# Secure MariaDB and set root password (first run only)
+# Secure MariaDB and set root password
+# (safe to run multiple times)
 ########################################
-# If we can connect as root WITHOUT a password via unix socket, we assume
-# this is the first-time setup and perform the hardening + password set.
-if mariadb -e "SELECT 1" >/dev/null 2>&1; then
-  echo "Running initial MariaDB hardening and root password setup..."
-
-  mariadb <<SQL
+mariadb <<SQL
 -- Remove anonymous users
 DELETE FROM mysql.user WHERE User='';
 
@@ -52,22 +45,18 @@ DELETE FROM mysql.user
 DROP DATABASE IF EXISTS test;
 DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
 
--- Set root password for modern MariaDB
-ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';
+-- Switch root to password-based auth and set password
+ALTER USER root@localhost IDENTIFIED VIA mysql_native_password;
+SET PASSWORD = PASSWORD('${DB_PASSWORD}');
 
 FLUSH PRIVILEGES;
 SQL
-else
-  echo "Skipping secure setup: cannot connect as root without password (probably already configured)."
-fi
 
 ########################################
 # Test connection with configured values
 ########################################
 echo "Testing MariaDB connection as ${DB_USER}@${DB_HOST}:${DB_PORT} ..."
-mariadb -u "${DB_USER}" -p"${DB_PASSWORD}" -h "${DB_HOST}" -P "${DB_PORT}" -e "SELECT VERSION() AS mariadb_version;"
+mariadb -u "${DB_USER}" -p"${DB_PASSWORD}" -h "${DB_HOST}" -P "${DB_PORT}" \
+  -e "SELECT VERSION() AS mariadb_version, USER() AS current_user;"
 
-echo "MariaDB installation and basic secure configuration completed."
-EOF
-
-chmod +x scripts/install_db.sh
+echo "MariaDB installation and configuration completed."
