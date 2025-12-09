@@ -58,6 +58,15 @@ class Game {
   @Column({ type: 'text', default: 'waiting' })
   status!: GameStatus;
 
+  @Column({ type: 'text', nullable: true })
+  secretWord?: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  impostorId?: string | null;
+
+  @Column({ type: 'boolean', default: false })
+  revealed!: boolean;
+
   @CreateDateColumn()
   createdAt!: Date;
 
@@ -142,7 +151,7 @@ function pickRandom<T>(list: T[]): T {
   return list[Math.floor(Math.random() * list.length)];
 }
 
-function buildGameButtons(gameId: string, status: GameStatus) {
+function buildGameButtons(gameId: string, status: GameStatus, hasWord: boolean, revealed: boolean) {
   const joinButton = new ButtonBuilder()
     .setCustomId(`join:${gameId}`)
     .setLabel('Join game')
@@ -156,9 +165,19 @@ function buildGameButtons(gameId: string, status: GameStatus) {
     .setCustomId(`restart:${gameId}`)
     .setLabel('Restart (new words)')
     .setStyle(ButtonStyle.Secondary)
-    .setDisabled(status !== 'sent');
+    .setDisabled(status !== 'sent' || !revealed);
+  const revealButton = new ButtonBuilder()
+    .setCustomId(`reveal:${gameId}`)
+    .setLabel('Reveal word & impostor')
+    .setStyle(ButtonStyle.Danger)
+    .setDisabled(!hasWord);
   return [
-    new ActionRowBuilder<ButtonBuilder>().addComponents(joinButton, sendButton, restartButton),
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      joinButton,
+      sendButton,
+      restartButton,
+      revealButton,
+    ),
   ];
 }
 
@@ -167,18 +186,26 @@ function formatGameMessage(game: Game, participantCount: number): string {
   const instructions = [
     'Click "Join game" to participate.',
     'The creator clicks "Send words" once ready.',
-    'After words are sent, use "Restart" to start another round.',
+    'After words are sent, click "Reveal" to show the word & impostor, then "Restart" for another round.',
   ].join(' ');
   const statusLine =
     game.status === 'waiting' ? 'Status: Waiting to send words.' : 'Status: Words sent.';
-  return `${intro}\n${instructions}\nPlayers joined: ${participantCount}\n${statusLine}`;
+  const revealLine = game.secretWord
+    ? game.revealed
+      ? 'Reveal: done.'
+      : 'Reveal: pending (creator must reveal before restart).'
+    : 'Reveal: word not sent yet.';
+  return `${intro}\n${instructions}\nPlayers joined: ${participantCount}\n${statusLine}\n${revealLine}`;
 }
 
 function parseButtonId(
   customId: string,
-): { action: 'join' | 'send' | 'restart'; gameId: string } | null {
+): { action: 'join' | 'send' | 'restart' | 'reveal'; gameId: string } | null {
   const [action, gameId] = customId.split(':');
-  if ((action === 'join' || action === 'send' || action === 'restart') && gameId) {
+  if (
+    (action === 'join' || action === 'send' || action === 'restart' || action === 'reveal') &&
+    gameId
+  ) {
     return { action, gameId };
   }
   return null;
@@ -214,7 +241,12 @@ async function handleCreateGame(interaction: ChatInputCommandInteraction) {
 
   await interaction.reply({
     content: formatGameMessage(game, participantCount),
-    components: buildGameButtons(game.id, game.status),
+    components: buildGameButtons(
+      game.id,
+      game.status,
+      Boolean(game.secretWord),
+      Boolean(game.revealed),
+    ),
   });
 }
 
@@ -262,7 +294,12 @@ async function handleJoinButton(interaction: ButtonInteraction, gameId: string) 
   try {
     await interaction.message.edit({
       content: formatGameMessage(game, participantCount),
-      components: buildGameButtons(game.id, game.status),
+      components: buildGameButtons(
+        game.id,
+        game.status,
+        Boolean(game.secretWord),
+        Boolean(game.revealed),
+      ),
     });
   } catch (error) {
     console.error('Failed to update game message after join', error);
@@ -341,6 +378,9 @@ async function handleSendButton(interaction: ButtonInteraction, gameId: string) 
   );
 
   game.status = 'sent';
+  game.revealed = false;
+  game.secretWord = secretWord;
+  game.impostorId = players[impostorIndex]?.id;
   await gameRepository.save(game);
 
   const failures = sendResults.filter((result) => result.status === 'failed-word');
@@ -371,7 +411,12 @@ async function handleSendButton(interaction: ButtonInteraction, gameId: string) 
   try {
     await interaction.message.edit({
       content: formatGameMessage(game, players.length),
-      components: buildGameButtons(game.id, game.status),
+      components: buildGameButtons(
+        game.id,
+        game.status,
+        Boolean(game.secretWord),
+        Boolean(game.revealed),
+      ),
     });
   } catch (error) {
     console.error('Failed to disable game buttons after sending words', error);
@@ -395,6 +440,14 @@ async function handleRestartButton(interaction: ButtonInteraction, gameId: strin
   if (game.creatorId !== interaction.user.id) {
     await interaction.reply({
       content: 'Only the game creator can restart the game.',
+      ephemeral: true,
+    });
+    return;
+  }
+
+  if (!game.revealed) {
+    await interaction.reply({
+      content: 'Reveal the last round before restarting.',
       ephemeral: true,
     });
     return;
@@ -450,6 +503,9 @@ async function handleRestartButton(interaction: ButtonInteraction, gameId: strin
   );
 
   game.status = 'sent';
+  game.revealed = false;
+  game.secretWord = secretWord;
+  game.impostorId = players[impostorIndex]?.id;
   await gameRepository.save(game);
 
   const failures = sendResults.filter((result) => result.status === 'failed-word');
@@ -480,10 +536,70 @@ async function handleRestartButton(interaction: ButtonInteraction, gameId: strin
   try {
     await interaction.message.edit({
       content: formatGameMessage(game, players.length),
-      components: buildGameButtons(game.id, game.status),
+      components: buildGameButtons(
+        game.id,
+        game.status,
+        Boolean(game.secretWord),
+        Boolean(game.revealed),
+      ),
     });
   } catch (error) {
     console.error('Failed to update game message after restart', error);
+  }
+}
+
+async function handleRevealButton(interaction: ButtonInteraction, gameId: string) {
+  const game = await gameRepository.findOne({
+    where: { id: gameId },
+  });
+
+  if (!game) {
+    await interaction.reply({
+      content: 'This game is no longer available.',
+      ephemeral: true,
+    });
+    return;
+  }
+
+  if (game.creatorId !== interaction.user.id) {
+    await interaction.reply({
+      content: 'Only the game creator can reveal the word and impostor.',
+      ephemeral: true,
+    });
+    return;
+  }
+
+  if (!game.secretWord || !game.impostorId) {
+    await interaction.reply({
+      content: 'Words have not been sent yet, nothing to reveal.',
+      ephemeral: true,
+    });
+    return;
+  }
+
+  await interaction.reply({
+    content: `Reveal:\nWord: **${game.secretWord}**\nImpostor: <@${game.impostorId}>`,
+    ephemeral: false,
+  });
+
+  game.revealed = true;
+  await gameRepository.save(game);
+
+  try {
+    const participantCount = await participantRepository.count({
+      where: { game: { id: game.id } },
+    });
+    await interaction.message.edit({
+      content: formatGameMessage(game, participantCount),
+      components: buildGameButtons(
+        game.id,
+        game.status,
+        Boolean(game.secretWord),
+        Boolean(game.revealed),
+      ),
+    });
+  } catch (error) {
+    console.error('Failed to update game message after reveal', error);
   }
 }
 
@@ -524,6 +640,11 @@ client.on('interactionCreate', async (interaction) => {
 
   if (parsed.action === 'restart') {
     await handleRestartButton(interaction, parsed.gameId);
+    return;
+  }
+
+  if (parsed.action === 'reveal') {
+    await handleRevealButton(interaction, parsed.gameId);
   }
 });
 
