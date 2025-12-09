@@ -44,12 +44,8 @@ DELETE FROM mysql.user
 DROP DATABASE IF EXISTS test;
 DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
 
--- Ensure root uses mysql_native_password and set password
-UPDATE mysql.user
-  SET plugin='mysql_native_password'
-  WHERE User='root' AND Host='localhost';
-
-SET PASSWORD FOR 'root'@'localhost' = PASSWORD('${DB_PASSWORD}');
+-- Set root password for modern MariaDB
+ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';
 
 FLUSH PRIVILEGES;
 SQL

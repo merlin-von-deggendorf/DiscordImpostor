@@ -13,7 +13,7 @@ npm ci
 npm start
 ```
 
-Invite the bot to your server, run `/impostor` in a channel, let at least 3 people join via the button, then have the creator click **Send words**.
+Invite the bot to your server, run `/impostor` in a channel, let at least 3 people join via the button, then have the creator click **Send words**. (Set `DEV=1` in `.env` to bypass the 3-player minimum for local testing.)
 
 Games are stored in MariaDB/MySQL (see `.env` for host/user/password/database/pool settings).
 

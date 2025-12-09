@@ -38,6 +38,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const wordListPath = path.resolve(__dirname, '../../data/impostor_wordlist.txt');
 const fallbackWords = ['Spaceship', 'Banana', 'Keyboard', 'Sunset', 'Lantern'];
+const isDev = Boolean(process.env.DEV ?? process.env.dev);
 
 type GameStatus = 'waiting' | 'sent';
 
@@ -358,6 +359,14 @@ async function handleSendButton(interaction: ButtonInteraction, gameId: string) 
     return;
   }
 
+  if (!isDev && players.length < 3) {
+    await interaction.reply({
+      content: 'Need at least 3 distinct players before sending words (set DEV to bypass for testing).',
+      ephemeral: true,
+    });
+    return;
+  }
+
   const impostorIndex = Math.floor(Math.random() * players.length);
   const secretWord = pickRandom(words);
 
@@ -478,6 +487,14 @@ async function handleRestartButton(interaction: ButtonInteraction, gameId: strin
   if (!players.length) {
     await interaction.reply({
       content: 'Could not load any players to restart the game.',
+      ephemeral: true,
+    });
+    return;
+  }
+
+  if (!isDev && players.length < 3) {
+    await interaction.reply({
+      content: 'Need at least 3 distinct players before sending words (set DEV to bypass for testing).',
       ephemeral: true,
     });
     return;
