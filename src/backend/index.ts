@@ -10,6 +10,7 @@ import {
   ChatInputCommandInteraction,
   Client,
   GatewayIntentBits,
+  MessageFlags,
   SlashCommandBuilder,
   User,
 } from 'discord.js';
@@ -308,31 +309,30 @@ async function handleJoinButton(interaction: ButtonInteraction, gameId: string) 
 }
 
 async function handleSendButton(interaction: ButtonInteraction, gameId: string) {
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
   const game = await gameRepository.findOne({
     where: { id: gameId },
     relations: ['participants'],
   });
 
   if (!game) {
-    await interaction.reply({
+    await interaction.editReply({
       content: 'This game is no longer available.',
-      ephemeral: true,
     });
     return;
   }
 
   if (game.creatorId !== interaction.user.id) {
-    await interaction.reply({
+    await interaction.editReply({
       content: 'Only the game creator can send the words.',
-      ephemeral: true,
     });
     return;
   }
 
   if (game.status !== 'waiting') {
-    await interaction.reply({
+    await interaction.editReply({
       content: 'Words were already sent for this game.',
-      ephemeral: true,
     });
     return;
   }
@@ -352,17 +352,15 @@ async function handleSendButton(interaction: ButtonInteraction, gameId: string) 
   }
 
   if (!players.length) {
-    await interaction.reply({
+    await interaction.editReply({
       content: 'Could not load any players (they may have left the server).',
-      ephemeral: true,
     });
     return;
   }
 
   if (!isDev && players.length < 3) {
-    await interaction.reply({
+    await interaction.editReply({
       content: 'Need at least 3 distinct players before sending words (set DEV to bypass for testing).',
-      ephemeral: true,
     });
     return;
   }
@@ -412,9 +410,8 @@ async function handleSendButton(interaction: ButtonInteraction, gameId: string) 
     responseLines.push(`Failed to DM: ${failedUsers}. They may have DMs disabled.`);
   }
 
-  await interaction.reply({
+  await interaction.editReply({
     content: responseLines.join(' '),
-    ephemeral: true,
   });
 
   try {
@@ -433,31 +430,30 @@ async function handleSendButton(interaction: ButtonInteraction, gameId: string) 
 }
 
 async function handleRestartButton(interaction: ButtonInteraction, gameId: string) {
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
   const game = await gameRepository.findOne({
     where: { id: gameId },
     relations: ['participants'],
   });
 
   if (!game) {
-    await interaction.reply({
+    await interaction.editReply({
       content: 'This game is no longer available.',
-      ephemeral: true,
     });
     return;
   }
 
   if (game.creatorId !== interaction.user.id) {
-    await interaction.reply({
+    await interaction.editReply({
       content: 'Only the game creator can restart the game.',
-      ephemeral: true,
     });
     return;
   }
 
   if (!game.revealed) {
-    await interaction.reply({
+    await interaction.editReply({
       content: 'Reveal the last round before restarting.',
-      ephemeral: true,
     });
     return;
   }
@@ -467,9 +463,8 @@ async function handleRestartButton(interaction: ButtonInteraction, gameId: strin
   );
 
   if (participantIds.length === 0) {
-    await interaction.reply({
+    await interaction.editReply({
       content: 'No players are in this game yet.',
-      ephemeral: true,
     });
     return;
   }
@@ -485,17 +480,15 @@ async function handleRestartButton(interaction: ButtonInteraction, gameId: strin
   }
 
   if (!players.length) {
-    await interaction.reply({
+    await interaction.editReply({
       content: 'Could not load any players to restart the game.',
-      ephemeral: true,
     });
     return;
   }
 
   if (!isDev && players.length < 3) {
-    await interaction.reply({
+    await interaction.editReply({
       content: 'Need at least 3 distinct players before sending words (set DEV to bypass for testing).',
-      ephemeral: true,
     });
     return;
   }
@@ -545,9 +538,8 @@ async function handleRestartButton(interaction: ButtonInteraction, gameId: strin
     responseLines.push(`Failed to DM: ${failedUsers}. They may have DMs disabled.`);
   }
 
-  await interaction.reply({
+  await interaction.editReply({
     content: responseLines.join(' '),
-    ephemeral: true,
   });
 
   try {
