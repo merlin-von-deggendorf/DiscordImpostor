@@ -1,6 +1,6 @@
 # Discord Impostor Bot
 
-Slash command `/impostor` that DMs a secret word to all selected users except one impostor (who gets told they do not know the word).
+Slash command `/impostor` opens a joinable game: players click a button to join, then the creator sends secret words by pressing another button. Everyone except one impostor gets the word by DM; the impostor is told to blend in.
 
 ## Prerequisites
 - Node.js 18+ and npm
@@ -13,7 +13,9 @@ npm ci
 npm start
 ```
 
-Invite the bot to your server, then use `/impostor` with at least 3 users.
+Invite the bot to your server, run `/impostor` in a channel, let at least 3 people join via the button, then have the creator click **Send words**.
+
+Games are stored in MariaDB/MySQL (see `.env` for host/user/password/database/pool settings).
 
 ## Install as a service (Debian)
 ```bash
@@ -31,7 +33,7 @@ scp ./.env pink-mole:~/DiscordImpostor/.env
 
 ### Service control
 ```bash
-systemctl enable discord-impostor.service 
+systemctl disable discord-impostor.service 
 systemctl start discord-impostor.service   # start
 systemctl stop discord-impostor.service    # stop
 systemctl restart discord-impostor.service # restart
