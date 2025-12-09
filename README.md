@@ -19,8 +19,9 @@ Invite the bot to your server, then use `/impostor` with at least 3 users.
 ```bash
 sudo bash scripts/install_service.sh
 ```
-- Uses `root` by default; override with `APP_USER` if desired.
-- Copies `.env` to `/etc/discord-impostor.env` (edit secrets there if needed).
+- Requires Node.js/npm to already be installed and `npm ci` run once in the repo.
+- Uses the repo’s `.env` by default; override with `ENV_FILE=/path/to/env` if you prefer.
+- Override `APP_DIR=/path/to/repo` to point the service at a different checkout.
 
 ### Service control
 ```bash
