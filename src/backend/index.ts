@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -144,6 +144,10 @@ const words = loadWords();
 const impostorCommand = new SlashCommandBuilder()
   .setName('impostor')
   .setDescription('Start an impostor game with joinable buttons.');
+
+const adventCommand = new SlashCommandBuilder()
+  .setName('advent23')
+  .setDescription('Upload the advent image to this channel.');
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
@@ -612,10 +616,36 @@ async function handleRevealButton(interaction: ButtonInteraction, gameId: string
   }
 }
 
+async function handleAdventCommand(interaction: ChatInputCommandInteraction) {
+  if (!interaction.channelId) {
+    await interaction.reply({ content: 'This command must be used in a channel.', ephemeral: true });
+    return;
+  }
+
+  const filePath = path.resolve(__dirname, '../../data/advent.png');
+  if (!existsSync(filePath)) {
+    await interaction.reply({
+      content: 'advent.png not found on the server. Please place the file at `data/advent.png`.',
+      ephemeral: true,
+    });
+    return;
+  }
+
+  try {
+    await interaction.reply({ files: [filePath] });
+  } catch (error) {
+    console.error('Failed to send advent image', error);
+    await interaction.reply({ content: 'Failed to upload image.', ephemeral: true });
+  }
+}
+
 client.once('ready', async () => {
   console.log(`Logged in as ${client.user?.tag ?? client.user?.username ?? 'bot'}`);
   try {
-    await client.application?.commands.set([impostorCommand.toJSON()]);
+    await client.application?.commands.set([
+      impostorCommand.toJSON(),
+      adventCommand.toJSON(),
+    ]);
     console.log('Slash commands registered.');
   } catch (error) {
     console.error('Failed to register slash commands:', error);
@@ -623,9 +653,16 @@ client.once('ready', async () => {
 });
 
 client.on('interactionCreate', async (interaction) => {
-  if (interaction.isChatInputCommand() && interaction.commandName === 'impostor') {
-    await handleCreateGame(interaction);
-    return;
+  if (interaction.isChatInputCommand()) {
+    if (interaction.commandName === 'impostor') {
+      await handleCreateGame(interaction);
+      return;
+    }
+
+    if (interaction.commandName === 'advent23') {
+      await handleAdventCommand(interaction);
+      return;
+    }
   }
 
   if (!interaction.isButton()) {
