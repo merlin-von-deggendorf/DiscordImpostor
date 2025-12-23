@@ -149,6 +149,10 @@ const adventCommand = new SlashCommandBuilder()
   .setName('advent23')
   .setDescription('Upload the advent image to this channel.');
 
+const advent24Command = new SlashCommandBuilder()
+  .setName('advent24')
+  .setDescription('Upload the advent24 image to this channel.');
+
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
 });
@@ -639,12 +643,36 @@ async function handleAdventCommand(interaction: ChatInputCommandInteraction) {
   }
 }
 
+async function handleAdvent24Command(interaction: ChatInputCommandInteraction) {
+  if (!interaction.channelId) {
+    await interaction.reply({ content: 'This command must be used in a channel.', ephemeral: true });
+    return;
+  }
+
+  const filePath = path.resolve(__dirname, '../../data/advent2.png');
+  if (!existsSync(filePath)) {
+    await interaction.reply({
+      content: 'advent2.png not found on the server. Please place the file at `data/advent2.png`.',
+      ephemeral: true,
+    });
+    return;
+  }
+
+  try {
+    await interaction.reply({ files: [filePath] });
+  } catch (error) {
+    console.error('Failed to send advent2 image', error);
+    await interaction.reply({ content: 'Failed to upload image.', ephemeral: true });
+  }
+}
+
 client.once('ready', async () => {
   console.log(`Logged in as ${client.user?.tag ?? client.user?.username ?? 'bot'}`);
   try {
     await client.application?.commands.set([
       impostorCommand.toJSON(),
       adventCommand.toJSON(),
+      advent24Command.toJSON(),
     ]);
     console.log('Slash commands registered.');
   } catch (error) {
@@ -661,6 +689,11 @@ client.on('interactionCreate', async (interaction) => {
 
     if (interaction.commandName === 'advent23') {
       await handleAdventCommand(interaction);
+      return;
+    }
+
+    if (interaction.commandName === 'advent24') {
+      await handleAdvent24Command(interaction);
       return;
     }
   }
